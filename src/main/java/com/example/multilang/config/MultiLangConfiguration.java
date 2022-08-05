@@ -47,7 +47,7 @@ public class MultiLangConfiguration {
             nested.setClazz(field.getDeclaringClass());
             multiLangColumnCache.put(field.getDeclaringClass(), nested);
         }
-        multiLangCache.addNested(nested);
+        multiLangCache.addNested(field, nested);
     }
 
     private static void registerMultiLangColumn(Class clazz, Field field) {
@@ -65,7 +65,7 @@ public class MultiLangConfiguration {
 
         private Collection<Field> contentField;
 
-        private Collection<MultiLangCache> nested;
+        private Map<Field, Collection<MultiLangCache>> nested;
 
         public MultiLangCache() {
             contentField = new HashSet<>();
@@ -95,17 +95,22 @@ public class MultiLangConfiguration {
             this.contentField.add(contentField);
         }
 
-        public Collection<MultiLangCache> getNested() {
+        public Map<Field, Collection<MultiLangCache>> getNested() {
             return nested;
         }
 
 
-        protected void setNested(Collection<MultiLangCache> nested) {
+        protected void setNested(Map<Field, Collection<MultiLangCache>> nested) {
             this.nested = nested;
         }
 
-        public void addNested(MultiLangCache multiLangCache) {
-            this.nested.add(multiLangCache);
+        public void addNested(Field field, MultiLangCache multiLangCache) {
+            Collection<MultiLangCache> multiLangCaches = this.nested.get(field);
+            if(multiLangCaches == null){
+                multiLangCaches = new HashSet<>();
+                this.nested.put(field, multiLangCaches);
+            }
+            multiLangCaches.add(multiLangCache);
         }
 
         @Override

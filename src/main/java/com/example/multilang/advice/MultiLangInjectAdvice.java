@@ -41,8 +41,6 @@ public class MultiLangInjectAdvice implements ResponseBodyAdvice {
             List<MultiLangModel> multiLangByTableIds = multiLangService.getMultiLangByTableIds(tableName, data.stream().map(BaseMultiLang::getId).collect(Collectors.toList()));
 
             multiLangHandle(data, multiLangByTableIds, multiLangCache);
-
-            Collection<MultiLangConfiguration.MultiLangCache> nested = multiLangCache.getNested();
         }
         return null;
     }
@@ -63,21 +61,12 @@ public class MultiLangInjectAdvice implements ResponseBodyAdvice {
     public BaseMultiLang getSigleData(Object body){
         return null;
     }
+    public void multiLangHandle(BaseMultiLang baseMultiLang, MultiLangModel multiLangByTableId, MultiLangConfiguration.MultiLangCache multiLangCache) {
 
+    }
     public void multiLangHandle(List<BaseMultiLang> baseMultiLangs, List<MultiLangModel> multiLangByTableIds, MultiLangConfiguration.MultiLangCache multiLangCache) {
-        if(baseMultiLangs == null || baseMultiLangs.isEmpty()){
-            return;
-        }
         Map<Long, MultiLangModel> collect = multiLangByTableIds.stream().collect(Collectors.toMap(MultiLangModel::getId, Function.identity()));
-        if(collect == null || collect.isEmpty()){
-            return;
-        }
         Map<String, Field> contentFieldMap = multiLangCache.getContentFieldMap();
-
-        if(contentFieldMap == null || contentFieldMap.isEmpty()){
-            return;
-        }
-
         baseMultiLangs.stream().forEach(baseMultiLang -> {
             Long id = baseMultiLang.getId();
             MultiLangModel multiLangModel = collect.get(id);
@@ -87,6 +76,18 @@ public class MultiLangInjectAdvice implements ResponseBodyAdvice {
                     field.set(baseMultiLang, multiLangModel.getContents());
                 } catch (IllegalAccessException e) {
                     throw new RuntimeException(e);
+                }
+                Map<Field, Collection<MultiLangConfiguration.MultiLangCache>> nested = multiLangCache.getNested();
+
+                for (Map.Entry<Field, Collection<MultiLangConfiguration.MultiLangCache>> fieldCollectionEntry : nested.entrySet()) {
+                    Field nestedField = fieldCollectionEntry.getKey();
+                    try {
+                        BaseMultiLang nestedBaseMultiLang = (BaseMultiLang)nestedField.get(baseMultiLang);
+                        Class<? extends BaseMultiLang> aClass = nestedBaseMultiLang.getClass();
+                    } catch (IllegalAccessException e) {
+                        throw new RuntimeException(e);
+                    }
+                    Collection<MultiLangConfiguration.MultiLangCache> value = fieldCollectionEntry.getValue();
                 }
             }
         });
