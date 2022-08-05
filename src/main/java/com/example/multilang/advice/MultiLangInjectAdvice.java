@@ -23,6 +23,7 @@ import java.util.stream.Collectors;
 
 public class MultiLangInjectAdvice implements ResponseBodyAdvice {
     @Autowired
+    @SuppressWarnings("all")
     private MultiLangService multiLangService;
 
     @Override
