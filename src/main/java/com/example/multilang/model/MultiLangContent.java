@@ -1,7 +1,5 @@
 package com.example.multilang.model;
 
-import com.baomidou.mybatisplus.core.incrementer.DefaultIdentifierGenerator;
-import com.baomidou.mybatisplus.core.incrementer.IdentifierGenerator;
 import com.example.service.MultiLangEntity;
 import org.apache.ibatis.type.JdbcType;
 

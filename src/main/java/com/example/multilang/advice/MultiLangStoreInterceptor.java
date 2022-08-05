@@ -1,12 +1,9 @@
 package com.example.multilang.advice;
 
-import com.baomidou.mybatisplus.annotation.TableId;
 import com.example.multilang.config.MultiLangContext;
 import com.example.multilang.model.BaseMultiLang;
-import com.example.multilang.model.MultiLangContent;
 import com.example.multilang.model.MultiLangModel;
 import com.example.multilang.service.MultiLangService;
-import com.example.service.MultiLangEntity;
 import org.apache.ibatis.executor.Executor;
 import org.apache.ibatis.mapping.MappedStatement;
 import org.apache.ibatis.mapping.SqlCommandType;

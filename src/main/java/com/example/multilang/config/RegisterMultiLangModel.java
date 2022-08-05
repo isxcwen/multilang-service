@@ -1,11 +1,9 @@
 package com.example.multilang.config;
 
 
-import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.example.multilang.annotations.EnableMultiLang;
 import com.example.multilang.model.BaseMultiLang;
-import com.example.multilang.model.MultiLangContent;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
@@ -19,15 +17,10 @@ import org.springframework.core.type.filter.TypeFilter;
 import org.springframework.util.ReflectionUtils;
 
 import java.io.IOException;
-import java.lang.reflect.Field;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 import static com.example.multilang.util.MultiLangUtils.isMultiLangColumn;
-import static com.example.multilang.util.MultiLangUtils.isMultiLangEntity;
 
 public class RegisterMultiLangModel implements ImportBeanDefinitionRegistrar {
     private MultiLangContext multiLangContext = MultiLangContext.getContext();
@@ -68,11 +61,11 @@ public class RegisterMultiLangModel implements ImportBeanDefinitionRegistrar {
             if(isMultiLangColumn(field)){
                 field.setAccessible(true);
                 multiLangContext.registerMultiLangColumn(field);
-            }else if(isMultiLangEntity(field)){
+            }/*else if(isMultiLangEntity(field)){
                 field.setAccessible(true);
                 regist(field.getType());
                 multiLangContext.registerMultiLangNested(aClass, field);
-            }
+            }*/
         });
     }
 }

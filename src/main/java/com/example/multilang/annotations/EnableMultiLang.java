@@ -2,8 +2,6 @@ package com.example.multilang.annotations;
 
 import com.example.multilang.config.MultiLangConfiguration;
 import com.example.multilang.config.RegisterMultiLangModel;
-import com.example.multilang.service.MultiLangService;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.context.annotation.Import;
 
 import java.lang.annotation.*;

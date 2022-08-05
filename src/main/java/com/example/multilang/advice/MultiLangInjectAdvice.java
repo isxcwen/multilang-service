@@ -26,7 +26,7 @@ public class MultiLangInjectAdvice implements ResponseBodyAdvice {
 
     @Override
     public boolean supports(MethodParameter returnType, Class converterType) {
-        return false;
+        return true;
     }
 
     @Override
@@ -40,8 +40,8 @@ public class MultiLangInjectAdvice implements ResponseBodyAdvice {
             }
             return data;
         } catch (IllegalAccessException e) {
-            return body;
         }
+        return body;
     }
 
     public Object getData(Object body){

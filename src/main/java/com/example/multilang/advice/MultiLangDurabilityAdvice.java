@@ -4,7 +4,6 @@ import com.example.multilang.config.MultiLangContext;
 import com.example.multilang.model.MultiLangContent;
 import com.example.multilang.model.MultiLangModel;
 import com.example.multilang.util.MultiLangUtils;
-import com.example.service.MultiLangEntity;
 import org.springframework.core.MethodParameter;
 import org.springframework.http.HttpInputMessage;
 import org.springframework.http.converter.HttpMessageConverter;
@@ -22,7 +21,7 @@ public class MultiLangDurabilityAdvice implements RequestBodyAdvice {
 
     @Override
     public boolean supports(MethodParameter methodParameter, Type targetType, Class<? extends HttpMessageConverter<?>> converterType) {
-        return false;
+        return true;
     }
 
     @Override
