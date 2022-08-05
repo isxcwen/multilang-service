@@ -11,10 +11,9 @@ import java.lang.annotation.*;
 @Target({ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)
 @Inherited
-@ConditionalOnBean(MultiLangService.class)
 @Import({MultiLangConfiguration.class, RegisterMultiLangModel.class})
 public @interface EnableMultiLang {
-    String[] scanBackages();
+    String[] backages();
 }
 
 /**

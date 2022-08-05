@@ -1,8 +1,7 @@
-package com.example.springboottest.test;
+package com.example.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.paramresolve.config.RequestBodyExtract;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -16,15 +15,6 @@ public class ControllerTest {
         System.out.println();
     }
 
-    @RequestMapping("/2")
-    public String test2(@RequestBodyExtract("lists") List<TestA> list){
-        for (TestA testA : list) {
-            System.out.println(testA.testb.get(0).testb);
-            System.out.println(testA.getOrigin());
-            System.out.println(testA);
-        }
-        return "success";
-    }
 
     public static class Test{
         private String origin;

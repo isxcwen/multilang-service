@@ -11,10 +11,14 @@ import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
 import org.springframework.context.annotation.ImportBeanDefinitionRegistrar;
 import org.springframework.core.type.AnnotationMetadata;
+import org.springframework.core.type.classreading.MetadataReader;
+import org.springframework.core.type.classreading.MetadataReaderFactory;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
 import org.springframework.core.type.filter.AssignableTypeFilter;
+import org.springframework.core.type.filter.TypeFilter;
 import org.springframework.util.ReflectionUtils;
 
+import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -22,15 +26,26 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import static com.example.multilang.util.MultiLangUtils.isMultiLangColumn;
+import static com.example.multilang.util.MultiLangUtils.isMultiLangEntity;
+
 public class RegisterMultiLangModel implements ImportBeanDefinitionRegistrar {
+    private MultiLangContext multiLangContext = MultiLangContext.getContext();
 
     @Override
     public void registerBeanDefinitions(AnnotationMetadata importingClassMetadata, BeanDefinitionRegistry registry) {
         ClassPathScanningCandidateComponentProvider scaner = new ClassPathScanningCandidateComponentProvider(false);
-        scaner.addIncludeFilter(new AssignableTypeFilter(BaseMultiLang.class));
-        scaner.addIncludeFilter(new AnnotationTypeFilter(TableName.class));
+        TypeFilter typeFilter = new TypeFilter() {
+            AssignableTypeFilter assignableTypeFilter = new AssignableTypeFilter(BaseMultiLang.class);
+            AnnotationTypeFilter annotationTypeFilter = new AnnotationTypeFilter(TableName.class);
+            @Override
+            public boolean match(MetadataReader metadataReader, MetadataReaderFactory metadataReaderFactory) throws IOException {
+                return assignableTypeFilter.match(metadataReader, metadataReaderFactory) && annotationTypeFilter.match(metadataReader, metadataReaderFactory);
+            }
+        };
+        scaner.addIncludeFilter(typeFilter);
 
-        String[] scanNackages = (String[]) importingClassMetadata.getAnnotationAttributes(EnableMultiLang.class.getName()).get("scanBackages");
+        String[] scanNackages = (String[]) importingClassMetadata.getAnnotationAttributes(EnableMultiLang.class.getName()).get("backages");
         Set<BeanDefinition> beanDefinitions = new HashSet<>();
         for (String scanNackage : scanNackages) {
             beanDefinitions.addAll(scaner.findCandidateComponents(scanNackage));
@@ -52,32 +67,12 @@ public class RegisterMultiLangModel implements ImportBeanDefinitionRegistrar {
         ReflectionUtils.doWithFields(aClass, field -> {
             if(isMultiLangColumn(field)){
                 field.setAccessible(true);
-                MultiLangConfiguration.registerMultiLangColumn(field);
+                multiLangContext.registerMultiLangColumn(field);
             }else if(isMultiLangEntity(field)){
                 field.setAccessible(true);
-                regist(field.getDeclaringClass());
-                MultiLangConfiguration.registerMultiLangNested(aClass, field);
+                regist(field.getType());
+                multiLangContext.registerMultiLangNested(aClass, field);
             }
         });
-    }
-
-    private boolean isMultiLangColumn(Field field){
-        return field.isAnnotationPresent(TableField.class) && isLangContent(field);
-    }
-
-    private boolean isMultiLangEntity(Field field){
-        Class<?> declaringClass = field.getDeclaringClass();
-        return BaseMultiLang.class.isAssignableFrom(declaringClass) && declaringClass.isAnnotationPresent(TableName.class);
-    }
-
-    private boolean isLangContent(Field field){
-        if(List.class.isAssignableFrom(field.getType())){
-            Type genericType = field.getGenericType();
-            if(genericType instanceof ParameterizedType){
-                Type actualTypeArgument = ((ParameterizedType) genericType).getActualTypeArguments()[0];
-                return MultiLangContent.class.equals(actualTypeArgument);
-            }
-        }
-        return false;
     }
 }

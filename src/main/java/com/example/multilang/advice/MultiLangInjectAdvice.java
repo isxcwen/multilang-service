@@ -1,28 +1,28 @@
 package com.example.multilang.advice;
 
-import com.baomidou.mybatisplus.annotation.TableName;
-import com.example.multilang.config.MultiLangConfiguration;
+import com.example.multilang.config.MultiLangContext;
 import com.example.multilang.model.BaseMultiLang;
-import com.example.multilang.model.MultiLangModel;
+import com.example.multilang.model.MultiLangContent;
 import com.example.multilang.service.MultiLangService;
 import com.example.multilang.util.MultiLangUtils;
+import com.example.service.MultiLangEntity;
+import org.apache.ibatis.type.JdbcType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.MethodParameter;
 import org.springframework.http.MediaType;
 import org.springframework.http.server.ServerHttpRequest;
 import org.springframework.http.server.ServerHttpResponse;
-import org.springframework.util.ReflectionUtils;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseBodyAdvice;
 
 import java.lang.reflect.Field;
 import java.util.*;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class MultiLangInjectAdvice implements ResponseBodyAdvice {
-    @Autowired
+    @Autowired(required = false)
     @SuppressWarnings("all")
     private MultiLangService multiLangService;
+    private MultiLangContext multiLangContext = MultiLangContext.getContext();
 
     @Override
     public boolean supports(MethodParameter returnType, Class converterType) {
@@ -31,66 +31,68 @@ public class MultiLangInjectAdvice implements ResponseBodyAdvice {
 
     @Override
     public Object beforeBodyWrite(Object body, MethodParameter returnType, MediaType selectedContentType, Class selectedConverterType, ServerHttpRequest request, ServerHttpResponse response) {
-        List<BaseMultiLang> data = getData(body);
-        if(data != null && !data.isEmpty()){
-            Class<? extends BaseMultiLang> aClass = data.get(0).getClass();
-
-            MultiLangConfiguration.MultiLangCache multiLangCache = MultiLangConfiguration.getMultiColumn(aClass);
-
-            String tableName = MultiLangUtils.getTableName(aClass);
-            List<MultiLangModel> multiLangByTableIds = multiLangService.getMultiLangByTableIds(tableName, data.stream().map(BaseMultiLang::getId).collect(Collectors.toList()));
-
-            multiLangHandle(data, multiLangByTableIds, multiLangCache);
-        }
-        return null;
-    }
-
-    private List<Long> getIds(Map<String, List<Long>> table2id, String tableName){
-        List<Long> longs = table2id.get(tableName);
-        if(longs == null){
-            longs = new ArrayList<>();
-            table2id.put(tableName, longs);
-        }
-        return longs;
-    }
-
-    public List<BaseMultiLang> getData(Object body){
-        return null;
-    }
-
-    public BaseMultiLang getSigleData(Object body){
-        return null;
-    }
-    public void multiLangHandle(BaseMultiLang baseMultiLang, MultiLangModel multiLangByTableId, MultiLangConfiguration.MultiLangCache multiLangCache) {
-
-    }
-    public void multiLangHandle(List<BaseMultiLang> baseMultiLangs, List<MultiLangModel> multiLangByTableIds, MultiLangConfiguration.MultiLangCache multiLangCache) {
-        Map<Long, MultiLangModel> collect = multiLangByTableIds.stream().collect(Collectors.toMap(MultiLangModel::getId, Function.identity()));
-        Map<String, Field> contentFieldMap = multiLangCache.getContentFieldMap();
-        baseMultiLangs.stream().forEach(baseMultiLang -> {
-            Long id = baseMultiLang.getId();
-            MultiLangModel multiLangModel = collect.get(id);
-            if(multiLangCache != null){
-                Field field = contentFieldMap.get(multiLangModel.getColumnName());
-                try {
-                    field.set(baseMultiLang, multiLangModel.getContents());
-                } catch (IllegalAccessException e) {
-                    throw new RuntimeException(e);
-                }
-                Map<Field, Collection<MultiLangConfiguration.MultiLangCache>> nested = multiLangCache.getNested();
-
-                for (Map.Entry<Field, Collection<MultiLangConfiguration.MultiLangCache>> fieldCollectionEntry : nested.entrySet()) {
-                    Field nestedField = fieldCollectionEntry.getKey();
-                    try {
-                        BaseMultiLang nestedBaseMultiLang = (BaseMultiLang)nestedField.get(baseMultiLang);
-                        Class<? extends BaseMultiLang> aClass = nestedBaseMultiLang.getClass();
-                    } catch (IllegalAccessException e) {
-                        throw new RuntimeException(e);
-                    }
-                    Collection<MultiLangConfiguration.MultiLangCache> value = fieldCollectionEntry.getValue();
-                }
+        try {
+            Object data = getData(body);
+            if(data instanceof List){
+                multiLangHandleList((List<BaseMultiLang>) data);
+            }else if (data instanceof BaseMultiLang) {
+                multiLangHandle((BaseMultiLang)data);
             }
-        });
+            return data;
+        } catch (IllegalAccessException e) {
+            return body;
+        }
     }
 
+    public Object getData(Object body){
+        return body;
+    }
+
+
+    public void multiLangHandle(BaseMultiLang baseMultiLang) throws IllegalAccessException {
+        Long id = baseMultiLang.getId();
+        Class<? extends BaseMultiLang> aClass = baseMultiLang.getClass();
+        String tableName = MultiLangUtils.getTableName(aClass);
+        MultiLangContext.MultiLangFieldCache multiFieldCache = multiLangContext.getMultiFieldCache(aClass);
+        List<MultiLangEntity> multiLangByTableId = multiLangService.getMultiLangByTableId(tableName, id);
+        multiLangHandle(baseMultiLang, multiLangByTableId, multiFieldCache);
+    }
+
+    public void multiLangHandle(BaseMultiLang baseMultiLang, List<MultiLangEntity> multiLangByTableIds, MultiLangContext.MultiLangFieldCache multiLangFieldCache) throws IllegalAccessException {
+        Collection<Field> contentField = multiLangFieldCache.getContentField();
+        Map<String, List<MultiLangEntity>> columnName2MultiLangModel = multiLangByTableIds.stream().collect(Collectors.groupingBy(MultiLangEntity::getColumnName, Collectors.toList()));
+        for (Field field : contentField) {
+            List<MultiLangEntity> multiLangEntities = columnName2MultiLangModel.get(MultiLangUtils.getColumnName(field));
+            JdbcType jdbcType = MultiLangUtils.getJdbcType(field);
+            List<MultiLangContent> multiLangContents = multiLangEntities.stream().map(multiLangEntitie -> MultiLangContent.init(multiLangEntitie, jdbcType)).collect(Collectors.toList());
+            field.set(baseMultiLang, multiLangContents);
+        }
+
+        Collection<Field> nested = multiLangFieldCache.getNested();
+        for (Field field : nested) {
+            Class<?> type = field.getType();
+            if(BaseMultiLang.class.isAssignableFrom(type)){
+                BaseMultiLang nestedBaseMultiLang = (BaseMultiLang) field.get(baseMultiLang);
+                multiLangHandle(nestedBaseMultiLang);
+            }
+
+        }
+    }
+
+    public void multiLangHandleList(List<BaseMultiLang> baseMultiLangs) throws IllegalAccessException {
+        Class<? extends BaseMultiLang> aClass = baseMultiLangs.get(0).getClass();
+        List<Long> ids = baseMultiLangs.stream().map(BaseMultiLang::getId).collect(Collectors.toList());
+        String tableName = MultiLangUtils.getTableName(aClass);
+        MultiLangContext.MultiLangFieldCache multiFieldCache = multiLangContext.getMultiFieldCache(aClass);
+        List<MultiLangEntity> multiLangByTableIds = multiLangService.getMultiLangByTableIds(tableName, ids);
+        multiLangHandleList(baseMultiLangs, multiLangByTableIds, multiFieldCache);
+    }
+    
+    public void multiLangHandleList(List<BaseMultiLang> baseMultiLangs, List<MultiLangEntity> multiLangByTableIds, MultiLangContext.MultiLangFieldCache MultiLangFieldCache) throws IllegalAccessException {
+        Map<Long, List<MultiLangEntity>> id2MultiLangByTableIds = multiLangByTableIds.stream().collect(Collectors.groupingBy(MultiLangEntity::getTableId));
+        for (BaseMultiLang baseMultiLang : baseMultiLangs) {
+            List<MultiLangEntity> multiLangEntities = id2MultiLangByTableIds.get(baseMultiLang.getId());
+            multiLangHandle(baseMultiLang, multiLangEntities, MultiLangFieldCache);
+        }
+    }
 }

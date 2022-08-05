@@ -2,19 +2,16 @@ package com.example.multilang.service;
 
 
 import com.example.multilang.model.MultiLangModel;
+import com.example.service.MultiLangEntity;
 
 import java.util.List;
 
 public interface MultiLangService {
-    List<MultiLangModel> getMultiLangById(Long id);
+    List<MultiLangEntity> getMultiLangByTableId(String tableName, Long tableId);
 
-    List<MultiLangModel> getMultiLangByIds(List<Long> ids);
+    List<MultiLangEntity> getMultiLangByTableIds(String tableName, List<Long> tableIds);
 
-    List<MultiLangModel> getMultiLangByTableId(String tableName, Long id);
+    void batchSave(Long id, List<MultiLangModel> multiLangModels);
 
-    List<MultiLangModel> getMultiLangByTableIds(String tableName, List<Long> ids);
-
-    List<MultiLangModel> getMultiLangByTableColumnId(String tableName, String column, Long id);
-
-    List<MultiLangModel> getMultiLangByTableColumnIds(String tableName, String column,List<Long> ids);
+    void batchDelete(String tableName, Long tableId);
 }
