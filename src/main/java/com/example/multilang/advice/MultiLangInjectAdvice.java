@@ -61,10 +61,9 @@ public class MultiLangInjectAdvice implements ResponseBodyAdvice {
     public BaseMultiLang getSigleData(Object body){
         return null;
     }
-    public void multiLangHandle(BaseMultiLang baseMultiLang, MultiLangModel multiLangByTableId, MultiLangConfiguration.MultiLangCache multiLangCache) {
 
-    }
-    public void multiLangHandle(List<BaseMultiLang> baseMultiLangs, List<MultiLangModel> multiLangByTableIds, MultiLangConfiguration.MultiLangCache multiLangCache) {
+    public List<BaseMultiLang> multiLangHandle(List<BaseMultiLang> baseMultiLangs, List<MultiLangModel> multiLangByTableIds, MultiLangConfiguration.MultiLangCache multiLangCache) {
+        List<BaseMultiLang> result = new ArrayList<>();
         Map<Long, MultiLangModel> collect = multiLangByTableIds.stream().collect(Collectors.toMap(MultiLangModel::getId, Function.identity()));
         Map<String, Field> contentFieldMap = multiLangCache.getContentFieldMap();
         baseMultiLangs.stream().forEach(baseMultiLang -> {
@@ -83,14 +82,14 @@ public class MultiLangInjectAdvice implements ResponseBodyAdvice {
                     Field nestedField = fieldCollectionEntry.getKey();
                     try {
                         BaseMultiLang nestedBaseMultiLang = (BaseMultiLang)nestedField.get(baseMultiLang);
-                        Class<? extends BaseMultiLang> aClass = nestedBaseMultiLang.getClass();
+                        result.add(nestedBaseMultiLang);
                     } catch (IllegalAccessException e) {
                         throw new RuntimeException(e);
                     }
-                    Collection<MultiLangConfiguration.MultiLangCache> value = fieldCollectionEntry.getValue();
                 }
             }
         });
+        return result;
     }
 
 }
