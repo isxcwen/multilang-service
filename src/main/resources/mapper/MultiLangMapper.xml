@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.service.mapper.MultiLangMapper">
+
+    <insert id="batchInsert">
+        insert into svc_lang_code (
+        id,
+        table_name,
+        table_id,
+        column_name,
+        language_code,
+        content_text,
+        content_varchar
+        )
+        values
+        <foreach collection="list" item="dept" index="index">
+            <foreach collection="dept.contents" item="item" index="index" separator="," >
+                (
+                ${@com.example.multilang.config.MultiLangContext@gengrateId()}, #{dept.tableName}, #{id}, #{dept.columnName}, #{item.languageCode},
+                <choose>
+                    <when test="dept.isText">
+                        #{item.content}, null
+                    </when>
+                    <otherwise>
+                        null, #{item.content}
+                    </otherwise>
+                </choose>
+                )
+            </foreach>
+        </foreach>
+    </insert>
+</mapper>

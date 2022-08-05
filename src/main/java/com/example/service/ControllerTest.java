@@ -1,7 +1,12 @@
 package com.example.service;
 
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.example.service.dto.UserDTO;
+import com.example.service.mapper.UserMapper;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -10,9 +15,25 @@ import java.util.*;
 @RestController
 @RequestMapping("/test")
 public class ControllerTest {
+    @Autowired
+    UserMapper userMapper;
     @RequestMapping("/1")
     public void a(){
         System.out.println();
+    }
+
+    @RequestMapping("/2")
+    public UserDTO a2(){
+        UserDTO user = new UserDTO();
+        user.setId(1L);
+        return user;
+    }
+    @RequestMapping("/3")
+    public void a3(@RequestBody UserDTO userDTO){
+        UserEntity user = new UserEntity();
+        user.setId(10L);
+        user.setName("bbbb");
+        userMapper.selectList(null);
     }
 
 

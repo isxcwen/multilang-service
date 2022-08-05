@@ -3,6 +3,7 @@ package com.example.service;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.example.multilang.model.MultiLangModel;
 import com.example.multilang.service.MultiLangService;
+import com.example.service.mapper.MultiLangMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -10,8 +11,9 @@ import java.util.List;
 
 @Service
 public class MultiLangServiceImpl implements MultiLangService {
-    @Autowired(required = false)
-    MultiLangMapper multiLangMapper;
+    @Autowired
+    private MultiLangMapper multiLangMapper;
+
     @Override
     public List<MultiLangEntity> getMultiLangByTableId(String tableName, Long tableId) {
         LambdaQueryWrapper<MultiLangEntity> multiLangEntityLambdaQueryWrapper = new LambdaQueryWrapper<>();
@@ -28,7 +30,7 @@ public class MultiLangServiceImpl implements MultiLangService {
 
     @Override
     public void batchSave(Long id, List<MultiLangModel> multiLangModels) {
-        //multiLangMapper.batchInsert(multiLangModels);
+        multiLangMapper.batchInsert(id, multiLangModels);
     }
 
     @Override

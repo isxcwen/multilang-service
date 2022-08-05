@@ -31,6 +31,7 @@ public class MultiLangInjectAdvice implements ResponseBodyAdvice {
 
     @Override
     public Object beforeBodyWrite(Object body, MethodParameter returnType, MediaType selectedContentType, Class selectedConverterType, ServerHttpRequest request, ServerHttpResponse response) {
+        //todo 是否要国际化 一般根据通用响应.getData
         try {
             Object data = getData(body);
             if(data instanceof List){
@@ -41,6 +42,7 @@ public class MultiLangInjectAdvice implements ResponseBodyAdvice {
             return data;
         } catch (IllegalAccessException e) {
         }
+        multiLangContext.removeCache();
         return body;
     }
 

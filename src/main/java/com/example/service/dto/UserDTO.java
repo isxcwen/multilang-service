@@ -1,18 +1,19 @@
-package com.example.service;
+package com.example.service.dto;
 
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.example.multilang.model.BaseMultiLang;
 import com.example.multilang.model.MultiLangContent;
+import com.example.service.Address;
 import org.apache.ibatis.type.JdbcType;
 
 import java.util.List;
 
 @TableName("user_table")
-public class User implements BaseMultiLang {
+public class UserDTO implements BaseMultiLang {
     private Long id;
 
-    @TableField(value = "name", jdbcType = JdbcType.LONGVARCHAR)
+    @TableField(value = "name", jdbcType = JdbcType.VARCHAR)
     private List<MultiLangContent> name;
 
     private Address address;

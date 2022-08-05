@@ -3,13 +3,10 @@ package com.example.service;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.example.multilang.model.MultiLangContent;
 import org.apache.ibatis.type.JdbcType;
 
-import java.lang.reflect.Type;
-import java.util.List;
 
-@TableName("svc_language_content")
+@TableName("svc_lang_code")
 public class MultiLangEntity {
     @TableId(value = "id", type = IdType.ASSIGN_ID)
     private Long id;
